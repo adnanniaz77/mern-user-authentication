@@ -12,6 +12,7 @@ mongoose
     .connect(process.env.DB_URI, {
         useNewUrlParser: true,
         useUnifiedTopology: true,
+        useCreateIndex: true,
     })
     .then(() => console.log("Connected to Database"))
     .catch((err) => console.log(err));
@@ -19,10 +20,8 @@ mongoose
 // middleware
 app.use(express.json());
 
-// testing
-app.get("/", (req, res) => {
-    res.send("Welcome");
-});
+// routes
+app.use("/api/user", require("./routes/user-route"));
 
 // listening on port 5000
 app.listen(PORT, () => {
