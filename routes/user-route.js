@@ -4,7 +4,9 @@ const User = require("../model/User");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 
-// register new user route
+//========================================
+//              REGISTER ROUTE
+//========================================
 
 router.post("/register", async (req, res) => {
     try {
@@ -61,7 +63,9 @@ router.post("/register", async (req, res) => {
     }
 });
 
-// login route
+//========================================
+//              LOGIN ROUTE
+//========================================
 
 router.post("/login", async (req, res) => {
     try {
@@ -112,5 +116,11 @@ router.post("/login", async (req, res) => {
         res.status(500).json(err.message);
     }
 });
+
+//========================================
+//              DELETE ROUTE
+//========================================
+
+router.delete("delete", async (req, res) => {});
 
 module.exports = router;
