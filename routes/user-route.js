@@ -2,13 +2,15 @@ const express = require("express");
 const router = express.Router();
 const User = require("../model/User");
 const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken");
 
 // register new user route
+
 router.post("/register", async (req, res) => {
     try {
         const { username, email, password, checkPassword } = req.body;
 
-        // input validation
+        // register input validation
 
         if (!username || !email || !password || !checkPassword)
             return res
@@ -16,24 +18,24 @@ router.post("/register", async (req, res) => {
                 .json({ msg: "Please fill out all the fields" });
 
         if (username.length < 5)
-            return res
-                .status(400)
-                .json({ msg: "username length must be at leat 5 characters" });
+            return res.status(400).json({
+                msg: "User's name length must be at least 5 characters",
+            });
 
         if (email.length < 5)
             return res
                 .status(400)
-                .json({ msg: "email length must be at leat 5 characters" });
+                .json({ msg: "Email length must be at least 5 characters" });
 
         if (password.length < 5)
             return res
                 .status(400)
-                .json({ msg: "password length must be at leat 5 characters" });
+                .json({ msg: "Password length must be at least 5 characters" });
 
         if (password !== checkPassword)
             return res.status(400).json({
                 msg:
-                    "passwords do not match, please provide matching passwords",
+                    "Passwords do not match, please provide matching passwords",
             });
 
         // check for existing user
@@ -41,7 +43,7 @@ router.post("/register", async (req, res) => {
         if (existingUser)
             return res
                 .status(400)
-                .json({ msg: "account with this email already exists" });
+                .json({ msg: "Account with this email already exists" });
 
         // password encryption
         const salt = await bcrypt.genSalt(10);
@@ -60,8 +62,55 @@ router.post("/register", async (req, res) => {
 });
 
 // login route
-router.post("/login", (req, res) => {
-    res.send("login");
+
+router.post("/login", async (req, res) => {
+    try {
+        const { email, password } = req.body;
+
+        // login input validation
+
+        if (!email || !password)
+            return res
+                .status(400)
+                .json({ msg: "Please fill out all the fields" });
+
+        if (email.length < 5)
+            return res
+                .status(400)
+                .json({ msg: "Email length must be at least 5 characters" });
+
+        if (password.length < 5)
+            return res
+                .status(400)
+                .json({ msg: "Password length must be at least 5 characters" });
+
+        // check if user has an account
+
+        const user = await User.findOne({ email: email });
+        if (!user)
+            return res.status(400).json({
+                msg: "No account found with this email, please register",
+            });
+
+        // comparing the passwords
+
+        const isMatch = await bcrypt.compare(password, user.password);
+        if (!isMatch) return res.status(400).json({ msg: "Invalid password" });
+
+        // issue jwt token for current user
+
+        const token = jwt.sign({ id: user._id }, process.env.TOKEN_SECRET);
+        res.json({
+            token,
+            user: {
+                id: user._id,
+                username: user.username,
+                email: user.email,
+            },
+        });
+    } catch (err) {
+        res.status(500).json(err.message);
+    }
 });
 
 module.exports = router;
